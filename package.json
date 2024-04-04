@@ -1,0 +1,29 @@
+{
+	"name": "opentel",
+	"version": "1.0.0",
+	"description": "an helper pacakage to start with sending open telmertry tracs logs and mertics",
+	"main": "instrumentation.js",
+	"scripts": {
+		"build": "tsc",
+		"test": "echo \"Error: no test specified\" && exit 1"
+	},
+	"author": "Haniel Bitton",
+	"license": "MIT",
+	"dependencies": {
+		"@opentelemetry/api": "^1.8.0",
+		"@opentelemetry/auto-instrumentations-node": "^0.43.0",
+		"@opentelemetry/exporter-metrics-otlp-proto": "^0.50.0",
+		"@opentelemetry/exporter-trace-otlp-proto": "^0.50.0",
+		"@opentelemetry/resources": "^1.23.0",
+		"@opentelemetry/sdk-logs": "^0.50.0",
+		"@opentelemetry/sdk-metrics": "^1.23.0",
+		"@opentelemetry/sdk-node": "^0.50.0",
+		"@opentelemetry/sdk-trace-base": "^1.23.0",
+		"@opentelemetry/sdk-trace-node": "^1.23.0",
+		"@opentelemetry/semantic-conventions": "^1.23.0"
+	},
+	"devDependencies": {
+		"@types/node": "^20.12.4",
+		"typescript": "^5.4.3"
+	}
+}
