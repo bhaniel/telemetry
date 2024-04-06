@@ -5,7 +5,7 @@ import { buildResource, getServiceName, initMetricsProvider, initTraceProvider, 
 const customLogger = new CustomDiagLogger("OpenTelDebug: ");
 
 function forwardLogToOpenTelemetry(message: string): void {
-    // console.log("Forwarding log:", message);
+    console.log("Forwarding log:", message);
     // Here you would forward the message to OpenTelemetry Collector or other backend
 }
 if (process.env.OPENTELURL && process.env.OPENTELTOKEN) {
