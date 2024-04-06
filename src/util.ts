@@ -6,7 +6,9 @@ import {
     BatchSpanProcessor,
     ConsoleSpanExporter,
     NodeTracerProvider,
+    ParentBasedSampler,
     SimpleSpanProcessor,
+    TraceIdRatioBasedSampler,
 } from "@opentelemetry/sdk-trace-node";
 import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-proto";
 import { MeterProvider, PeriodicExportingMetricReader } from "@opentelemetry/sdk-metrics";
@@ -69,10 +71,13 @@ function createExporterConfig(baseUrl: string, endpoint: string, token: string) 
 
 export function initTraceProvider(resource: Resource, url, token, logger, isConsole: boolean) {
     if (process.env.OPENTELTRACE) {
+        const sampler = new ParentBasedSampler({
+            root: new TraceIdRatioBasedSampler(1),
+        });
         const exporter = new OTLPTraceExporter(createExporterConfig(url, "/v1/traces", token));
         const traceProvider = new NodeTracerProvider({
             resource,
-            sampler: new IgnorePathsSampler(getIgnorePaths()),
+            sampler: new IgnorePathsSampler(getIgnorePaths(), sampler),
         });
 
         traceProvider.addSpanProcessor(new BatchSpanProcessor(exporter, getBatchConfig()));

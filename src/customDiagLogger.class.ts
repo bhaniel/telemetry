@@ -3,8 +3,8 @@ import { DiagConsoleLogger } from "@opentelemetry/api";
 export class CustomDiagLogger {
     private logger;
     private prefix;
-    constructor(prefix) {
-        this.logger = new DiagConsoleLogger();
+    constructor(prefix, logger: DiagConsoleLogger) {
+        this.logger = logger;
         this.prefix = prefix;
     }
 

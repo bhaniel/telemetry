@@ -1,8 +1,9 @@
+import { DiagConsoleLogger } from "@opentelemetry/api";
 import { CustomDiagLogger } from "./customDiagLogger.class";
 import { buildResource, getServiceName, initMetricsProvider, initTraceProvider, setupLogging } from "./util";
 
 /* instrumentation.ts */
-const customLogger = new CustomDiagLogger("OpenTelDebug: ");
+const customLogger = new CustomDiagLogger("OpenTelDebug: ", new DiagConsoleLogger());
 
 function forwardLogToOpenTelemetry(message: string): void {
     console.log("Forwarding log:", message);
