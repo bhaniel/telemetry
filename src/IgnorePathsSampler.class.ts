@@ -17,6 +17,15 @@ export class IgnorePathsSampler {
         return this.delegateSampler.shouldSample(context, traceId, spanName, spanKind, attributes, links);
     }
 
+    setIgnorePaths(ignores: { [key: string]: boolean }, merge = true) {
+        this.ignorePaths = merge
+            ? {
+                  ...this.ignorePaths,
+                  ...ignores,
+              }
+            : ignores;
+    }
+
     toString() {
         return "IgnorePathsSampler";
     }

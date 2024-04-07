@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { Attributes, Context, Link, SpanContext, SpanKind, TraceFlags, context } from "@opentelemetry/api";
 import { IgnorePathsSampler } from "./IgnorePathsSampler.class";
 import { ParentBasedSampler, SamplingDecision, SamplingResult } from "@opentelemetry/sdk-trace-node";
@@ -16,7 +17,6 @@ describe("IgnorePathsSampler", () => {
                 attributes: Attributes,
                 links: Link[],
             ): SamplingResult => {
-                console.log(context, traceId, spanName, spanKind, attributes, links);
                 return {
                     decision: SamplingDecision.RECORD,
                 };
@@ -64,6 +64,33 @@ describe("IgnorePathsSampler", () => {
                 [],
             ).decision,
         ).toEqual(SamplingDecision.NOT_RECORD);
+    });
+
+    it("should not record because we ovrride", () => {
+        const ctx = context.active();
+        sampler.setIgnorePaths({}, false);
+        const result: SamplingResult = sampler.shouldSample(
+            ctx,
+            "45646456yfhgfgghfhg",
+            "notRecord",
+            SpanKind.CLIENT,
+            { "http.target": "/ignore" },
+            [],
+        );
+
+        expect(result.decision).toEqual(SamplingDecision.RECORD);
+        sampler.setIgnorePaths({ "/ignore": true });
+
+        const result2: SamplingResult = sampler.shouldSample(
+            ctx,
+            "45646456yfhgfgghfhg",
+            "notRecord",
+            SpanKind.CLIENT,
+            { "http.target": "/ignore" },
+            [],
+        );
+
+        expect(result2.decision).toEqual(SamplingDecision.NOT_RECORD);
     });
 
     it("should not record if path is ignored", () => {

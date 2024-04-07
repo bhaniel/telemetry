@@ -6,9 +6,7 @@ import {
     BatchSpanProcessor,
     ConsoleSpanExporter,
     NodeTracerProvider,
-    ParentBasedSampler,
     SimpleSpanProcessor,
-    TraceIdRatioBasedSampler,
 } from "@opentelemetry/sdk-trace-node";
 import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-proto";
 import { MeterProvider, PeriodicExportingMetricReader } from "@opentelemetry/sdk-metrics";
@@ -18,15 +16,6 @@ import { StdoutInterceptor } from "./stdoutInterceptor.class";
 import otel, { DiagLogLevel, diag } from "@opentelemetry/api";
 import { getNodeAutoInstrumentations } from "@opentelemetry/auto-instrumentations-node";
 import { NodeSDK } from "@opentelemetry/sdk-node";
-
-const ignorePathes: { [key: string]: boolean } = {
-    "/version": true,
-    "/health_check": true,
-    "/metrics": true,
-    "/swagger": true,
-    "/swagger-json": true,
-    "/favicon.ico": true,
-};
 
 export function getServiceName(customLogger) {
     try {
@@ -56,20 +45,6 @@ function getBatchConfig() {
     };
 }
 
-export function setIgnorePathes(ignores: { [key: string]: boolean }, merge = true) {
-    return merge
-        ? {
-              ...ignorePathes,
-              ...ignores,
-          }
-        : ignores;
-}
-
-function getIgnorePaths() {
-    // Define paths to ignore for tracing
-    return ignorePathes;
-}
-
 function createExporterConfig(baseUrl: string, endpoint: string, token: string) {
     return {
         timeoutMillis: 15000,
@@ -80,15 +55,19 @@ function createExporterConfig(baseUrl: string, endpoint: string, token: string) 
     };
 }
 
-export function initTraceProvider(resource: Resource, url, token, logger, isConsole: boolean) {
+export function initTraceProvider(
+    resource: Resource,
+    url,
+    token,
+    logger,
+    isConsole: boolean,
+    sampler: IgnorePathsSampler,
+) {
     if (process.env.OPENTELTRACE) {
-        const sampler = new ParentBasedSampler({
-            root: new TraceIdRatioBasedSampler(1),
-        });
         const exporter = new OTLPTraceExporter(createExporterConfig(url, "/v1/traces", token));
         const traceProvider = new NodeTracerProvider({
             resource,
-            sampler: new IgnorePathsSampler(getIgnorePaths(), sampler),
+            sampler,
         });
 
         traceProvider.addSpanProcessor(new BatchSpanProcessor(exporter, getBatchConfig()));
