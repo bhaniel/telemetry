@@ -40,6 +40,41 @@ OPENTELLOGGINGURL=you_url_for_logs
 
 Replace `your_token`, `your_url`,`you_url_for_logs` and `your_trace_flag` with your actual values.
 
+### Ignore Paths
+
+By default, certain paths are ignored by this package. 
+
+```json
+{
+  "/version": true,
+  "/health_check": true,
+  "/metrics": true,
+  "/swagger": true,
+  "/swagger-json": true,
+  "/favicon.ico": true
+}
+```
+
+Each key in this object is a path, and the value is a boolean indicating whether the path should be ignored (true) or not (false).
+
+### Overriding Ignore Paths
+
+You can override the default ignore paths by importing the `setIgnorePaths` function and passing your own object. The function takes two parameters:
+
+1. An object where each key is a path and the value is a boolean indicating whether the path should be ignored (true) or not (false).
+2. An optional boolean parameter that indicates whether the paths should be merged with the existing ones (true) or replace them (false). This parameter is `true` by default, which means the paths will be merged.
+
+Here's how you can use `setIgnorePaths`:
+
+```javascript
+import { setIgnorePaths } from 'your-package-name';
+
+setIgnorePaths({}, false); // This will override the default paths with an empty object
+setIgnorePaths({ '/test': true }); // This will add '/test' to the default paths
+```
+
+In the first example, the default paths are replaced with an empty object, which means no paths will be ignored. In the second example, the path '/test' is added to the default paths.
+
 ## Contributing
 
 If you want to contribute to this project, please open an issue or a pull request.

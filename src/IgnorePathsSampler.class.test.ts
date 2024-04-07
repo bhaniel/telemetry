@@ -4,28 +4,26 @@ import { ParentBasedSampler, SamplingDecision, SamplingResult } from "@opentelem
 
 describe("IgnorePathsSampler", () => {
     let sampler: IgnorePathsSampler;
-    let mockParentBasedSampler: ParentBasedSampler;
+
     let _spanContext: SpanContext;
-
-    beforeEach(() => {
-        mockParentBasedSampler = new ParentBasedSampler({
-            root: {
-                shouldSample: (
-                    context: Context,
-                    traceId: string,
-                    spanName: string,
-                    spanKind: SpanKind,
-                    attributes: Attributes,
-                    links: Link[],
-                ): SamplingResult => {
-                    console.log(context, traceId, spanName, spanKind, attributes, links);
-                    return {
-                        decision: SamplingDecision.RECORD,
-                    };
-                },
+    const mockParentBasedSampler = new ParentBasedSampler({
+        root: {
+            shouldSample: (
+                context: Context,
+                traceId: string,
+                spanName: string,
+                spanKind: SpanKind,
+                attributes: Attributes,
+                links: Link[],
+            ): SamplingResult => {
+                console.log(context, traceId, spanName, spanKind, attributes, links);
+                return {
+                    decision: SamplingDecision.RECORD,
+                };
             },
-        });
-
+        },
+    });
+    beforeEach(() => {
         _spanContext = {
             traceId: "",
             spanId: "",
@@ -35,6 +33,39 @@ describe("IgnorePathsSampler", () => {
         sampler = new IgnorePathsSampler({ "/ignore": true }, mockParentBasedSampler);
     });
 
+    it("should ignore specified paths", () => {
+        const sampler = new IgnorePathsSampler(
+            {
+                "/ignore": false,
+                "/dont-ignore": true,
+            },
+            mockParentBasedSampler,
+        );
+        const ctx = context.active();
+
+        expect(
+            sampler.shouldSample(
+                ctx,
+                "45646456yfhgfgghfhg",
+                "ignore",
+                SpanKind.CLIENT,
+                { "http.target": "/ignore" },
+                [],
+            ).decision,
+        ).toEqual(SamplingDecision.RECORD);
+
+        expect(
+            sampler.shouldSample(
+                ctx,
+                "412412412sdsad",
+                "dontIgnore",
+                SpanKind.CLIENT,
+                { "http.target": "/dont-ignore" },
+                [],
+            ).decision,
+        ).toEqual(SamplingDecision.NOT_RECORD);
+    });
+
     it("should not record if path is ignored", () => {
         const ctx = context.active().setValue(Symbol.for("OpenTelemetry Context Key SPAN"), {
             _spanContext: { ..._spanContext, traceFlags: 0 },
@@ -42,7 +73,7 @@ describe("IgnorePathsSampler", () => {
         const result: SamplingResult = sampler.shouldSample(
             ctx,
             "45646456yfhgfgghfhg",
-            "spanName",
+            "notRecord",
             SpanKind.CLIENT,
             { "http.target": "/ignore" },
             [],
@@ -58,7 +89,7 @@ describe("IgnorePathsSampler", () => {
         const result: SamplingResult = sampler.shouldSample(
             ctx,
             "45646456yfhgfgghfhg",
-            "spanName",
+            "emptyURL",
             SpanKind.CLIENT,
             {},
             [],
@@ -72,7 +103,7 @@ describe("IgnorePathsSampler", () => {
         const result = sampler.shouldSample(
             ctx,
             "45646456yfhgfgghfhg",
-            "spanName",
+            "record",
             SpanKind.SERVER,
             { "http.target": "/not-ignored" },
             [],

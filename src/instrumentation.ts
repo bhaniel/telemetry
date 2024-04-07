@@ -9,6 +9,7 @@ function forwardLogToOpenTelemetry(message: string): void {
     console.log("Forwarding log:", message);
     // Here you would forward the message to OpenTelemetry Collector or other backend
 }
+customLogger.info("Starting instrumentation");
 if (process.env.OPENTELURL && process.env.OPENTELTOKEN) {
     try {
         const serviceName = getServiceName(customLogger);
@@ -20,6 +21,7 @@ if (process.env.OPENTELURL && process.env.OPENTELTOKEN) {
         initMetricsProvider(resource, process.env.OPENTELURL, process.env.OPENTELTOKEN);
         initTraceProvider(resource, process.env.OPENTELURL, process.env.OPENTELTOKEN, customLogger, false);
         setupLogging(process.env.OPENTELLOGGINGURL, process.env.OPENTELTOKEN, forwardLogToOpenTelemetry);
+        customLogger.info("Instrumentation started", serviceName);
     } catch (err) {
         customLogger.error(err);
     }

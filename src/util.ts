@@ -19,6 +19,15 @@ import otel, { DiagLogLevel, diag } from "@opentelemetry/api";
 import { getNodeAutoInstrumentations } from "@opentelemetry/auto-instrumentations-node";
 import { NodeSDK } from "@opentelemetry/sdk-node";
 
+const ignorePathes: { [key: string]: boolean } = {
+    "/version": true,
+    "/health_check": true,
+    "/metrics": true,
+    "/swagger": true,
+    "/swagger-json": true,
+    "/favicon.ico": true,
+};
+
 export function getServiceName(customLogger) {
     try {
         return JSON.parse(fs.readFileSync("package.json", "utf8")).name;
@@ -47,16 +56,16 @@ function getBatchConfig() {
     };
 }
 
+export function setIgnorePathes(ignores: { [key: string]: boolean }, merge = true) {
+    return {
+        ...ignorePathes,
+        ...ignores,
+    };
+}
+
 function getIgnorePaths() {
     // Define paths to ignore for tracing
-    return {
-        "/version": true,
-        "/health_check": true,
-        "/metrics": true,
-        "/swagger": true,
-        "/swagger-json": true,
-        "/favicon.ico": true,
-    };
+    return ignorePathes;
 }
 
 function createExporterConfig(baseUrl: string, endpoint: string, token: string) {

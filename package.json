@@ -2,9 +2,10 @@
 	"name": "@haniel/opentel",
 	"version": "1.0.0",
 	"description": "an helper pacakage to start with sending open telmertry tracs logs and mertics",
-	"main": "instrumentation.js",
+	"main": "dist/instrumentation.js",
 	"scripts": {
 		"build": "tsc",
+		"watch": "tsc --watch",
 		"lint": "eslint .",
 		"test": "jest"
 	},

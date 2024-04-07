@@ -4,7 +4,7 @@ export class IgnorePathsSampler {
     private spanSymbol = Symbol.for("OpenTelemetry Context Key SPAN");
 
     constructor(
-        private ignorePaths,
+        private ignorePaths: { [key: string]: boolean },
         private delegateSampler: ParentBasedSampler,
     ) {}
 
