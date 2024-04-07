@@ -57,10 +57,12 @@ function getBatchConfig() {
 }
 
 export function setIgnorePathes(ignores: { [key: string]: boolean }, merge = true) {
-    return {
-        ...ignorePathes,
-        ...ignores,
-    };
+    return merge
+        ? {
+              ...ignorePathes,
+              ...ignores,
+          }
+        : ignores;
 }
 
 function getIgnorePaths() {
