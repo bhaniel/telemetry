@@ -107,7 +107,7 @@ function start(logger: CustomDiagLogger, resource: Resource) {
 
     sdk.start();
 
-    if (process.env.NODE_ENV === "local") {
+    if (process.env.NODE_ENV === "local" || process.env.OPENTELDEBUG) {
         diag.setLogger(logger, DiagLogLevel.INFO);
     }
 

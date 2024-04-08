@@ -36,7 +36,7 @@ if (process.env.OPENTELURL && process.env.OPENTELTOKEN) {
         initMetricsProvider(resource, process.env.OPENTELURL, process.env.OPENTELTOKEN);
         initTraceProvider(resource, process.env.OPENTELURL, process.env.OPENTELTOKEN, customLogger, false, sampler);
         setupLogging(process.env.OPENTELLOGGINGURL, process.env.OPENTELTOKEN, forwardLogToOpenTelemetry);
-        customLogger.info("Instrumentation started", serviceName);
+        customLogger.info(`Instrumentation started on ${serviceName} and send trace to ${process.env.OPENTELURL}`);
     } catch (err) {
         customLogger.error(err);
     }
