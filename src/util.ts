@@ -27,7 +27,7 @@ export function getServiceName(customLogger) {
     }
 }
 
-export function buildResource(serviceName: string, version: string, attr = {}) {
+export function buildResource(serviceName: string, version: string, attr = {}): Resource {
     // Merges default resource with provided attributes for flexibility
     return Resource.default().merge(
         new Resource({
@@ -40,9 +40,9 @@ export function buildResource(serviceName: string, version: string, attr = {}) {
 
 function getBatchConfig() {
     return {
-        scheduledDelayMillis: 2000,
-        maxQueueSize: 5000,
-        maxExportBatchSize: 512,
+        scheduledDelayMillis: 500,
+        maxQueueSize: 10000,
+        maxExportBatchSize: 1000,
     };
 }
 
@@ -56,6 +56,21 @@ function createExporterConfig(baseUrl: string, endpoint: string, token: string) 
     };
 }
 
+export function getEnvVar() {
+    return {
+        url: process.env.OPENTEL_URL,
+        logUrl: process.env.OPENTEL_LOG_URL,
+        logToken: process.env.OPENTEL_LOG_TOKEN,
+        token: process.env.OPENTEL_TOKEN,
+        isConsole: !!process.env.OPENTEL_CONSOLE,
+        environment: process.env.NODE_ENV,
+        isMetrics: !!process.env.OPENTEL_METRICS,
+        isZipKin: !!process.env.OPENTEL_ZIPKIN,
+        isOpentel: !!process.env.OPENTEL_INIT,
+        isDebug: !!process.env.OPENTEL_DEBUG,
+    };
+}
+
 export function initTraceProvider(
     resource: Resource,
     url,
@@ -63,25 +78,23 @@ export function initTraceProvider(
     logger,
     isConsole: boolean,
     sampler: IgnorePathsSampler,
+    isZipKin: boolean,
 ) {
-    if (process.env.OPENTELTRACE) {
+    const traceProvider = new NodeTracerProvider({
+        resource,
+        sampler,
+    });
+    traceProvider.register();
+    if (url && token) {
         const exporter = new OTLPTraceExporter(createExporterConfig(url, "/v1/traces", token));
-        const traceProvider = new NodeTracerProvider({
-            resource,
-            sampler,
-        });
-        traceProvider.register();
-        if (process.env.ZIPKIN)
-            traceProvider.addSpanProcessor(new BatchSpanProcessor(new ZipkinExporter(), getBatchConfig()));
         traceProvider.addSpanProcessor(new BatchSpanProcessor(exporter, getBatchConfig()));
-        if (isConsole) traceProvider.addSpanProcessor(new SimpleSpanProcessor(new ConsoleSpanExporter()));
-
-        start(logger, resource);
     }
+    if (isZipKin) traceProvider.addSpanProcessor(new BatchSpanProcessor(new ZipkinExporter(), getBatchConfig()));
+    if (isConsole) traceProvider.addSpanProcessor(new SimpleSpanProcessor(new ConsoleSpanExporter()));
 }
 
-export function initMetricsProvider(resource: Resource, url, token) {
-    if (process.env.OPENTELMETRICS) {
+export function initMetricsProvider(resource: Resource, url, token, isMetrics: boolean) {
+    if (isMetrics && url && token) {
         const exporter = new OTLPMetricExporter(createExporterConfig(url, "/v1/metrics", token));
         const metricsProvider = new MeterProvider({
             resource,
@@ -93,14 +106,14 @@ export function initMetricsProvider(resource: Resource, url, token) {
 }
 
 export function setupLogging(url, token, forwardLogToOpenTelemetry: (message: string) => void) {
-    if (url) {
+    if (url && token) {
         const originalStdoutWrite = process.stdout.write.bind(process.stdout);
         const interceptor = new StdoutInterceptor(forwardLogToOpenTelemetry, originalStdoutWrite);
         process.stdout.write = interceptor.write.bind(interceptor) as typeof process.stdout.write;
     }
 }
 
-function start(logger: CustomDiagLogger, resource: Resource) {
+export function start(logger: CustomDiagLogger, resource: Resource, isDebug = false) {
     const sdk = new NodeSDK({
         resource,
         instrumentations: [getNodeAutoInstrumentations()],
@@ -108,7 +121,7 @@ function start(logger: CustomDiagLogger, resource: Resource) {
 
     sdk.start();
 
-    if (process.env.NODE_ENV === "local" || process.env.OPENTELDEBUG) {
+    if (isDebug) {
         diag.setLogger(logger, DiagLogLevel.INFO);
     }
 

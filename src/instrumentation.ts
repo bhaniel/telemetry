@@ -1,6 +1,14 @@
 import { DiagConsoleLogger } from "@opentelemetry/api";
 import { CustomDiagLogger } from "./customDiagLogger.class";
-import { buildResource, getServiceName, initMetricsProvider, initTraceProvider, setupLogging } from "./util";
+import {
+    buildResource,
+    getEnvVar,
+    getServiceName,
+    initMetricsProvider,
+    initTraceProvider,
+    setupLogging,
+    start,
+} from "./util";
 import { IgnorePathsSampler } from "./IgnorePathsSampler.class";
 import { ParentBasedSampler, TraceIdRatioBasedSampler } from "@opentelemetry/sdk-trace-node";
 
@@ -21,28 +29,25 @@ export const sampler: IgnorePathsSampler = new IgnorePathsSampler(
     }),
 );
 function forwardLogToOpenTelemetry(message: string): void {
-    console.log("Forwarding log:", message);
+    customLogger.info("Forwarding log:", message);
     // Here you would forward the message to OpenTelemetry Collector or other backend
 }
-customLogger.info("Starting instrumentation");
-if (process.env.OPENTELURL && process.env.OPENTELTOKEN) {
+// customLogger.info("Starting instrumentation");
+
+const config = getEnvVar();
+if (config.isOpentel) {
     try {
+        customLogger.info("Starting instrumentation");
         const serviceName = getServiceName(customLogger);
         const resource = buildResource(serviceName, "1.0.0", {
             ["cx.application.name"]: serviceName,
             ["cx.subsystem.name"]: "nodejs",
-            ["environment"]: process.env.NODE_ENV,
+            ["environment"]: config.environment,
         });
-        initMetricsProvider(resource, process.env.OPENTELURL, process.env.OPENTELTOKEN);
-        initTraceProvider(
-            resource,
-            process.env.OPENTELURL,
-            process.env.OPENTELTOKEN,
-            customLogger,
-            !!process.env.OPENTELCONSOLE,
-            sampler,
-        );
-        setupLogging(process.env.OPENTELLOGGINGURL, process.env.OPENTELTOKEN, forwardLogToOpenTelemetry);
+        initMetricsProvider(resource, config.url, config.token, config.isMetrics);
+        initTraceProvider(resource, config.url, config.token, customLogger, config.isConsole, sampler, config.isZipKin);
+        setupLogging(config.logUrl, config.logToken, forwardLogToOpenTelemetry);
+        start(customLogger, resource, config.isDebug);
         customLogger.info(`Instrumentation started on ${serviceName} and send trace to ${process.env.OPENTELURL}`);
     } catch (err) {
         customLogger.error(err);
