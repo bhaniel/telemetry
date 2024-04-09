@@ -16,6 +16,7 @@ import { StdoutInterceptor } from "./stdoutInterceptor.class";
 import otel, { DiagLogLevel, diag } from "@opentelemetry/api";
 import { getNodeAutoInstrumentations } from "@opentelemetry/auto-instrumentations-node";
 import { NodeSDK } from "@opentelemetry/sdk-node";
+import { ZipkinExporter } from "@opentelemetry/exporter-zipkin";
 
 export function getServiceName(customLogger) {
     try {
@@ -39,8 +40,8 @@ export function buildResource(serviceName: string, version: string, attr = {}) {
 
 function getBatchConfig() {
     return {
-        scheduledDelayMillis: 1000,
-        maxQueueSize: 2048,
+        scheduledDelayMillis: 2000,
+        maxQueueSize: 5000,
         maxExportBatchSize: 512,
     };
 }
@@ -69,11 +70,11 @@ export function initTraceProvider(
             resource,
             sampler,
         });
-
+        traceProvider.register();
+        if (process.env.ZIPKIN)
+            traceProvider.addSpanProcessor(new BatchSpanProcessor(new ZipkinExporter(), getBatchConfig()));
         traceProvider.addSpanProcessor(new BatchSpanProcessor(exporter, getBatchConfig()));
         if (isConsole) traceProvider.addSpanProcessor(new SimpleSpanProcessor(new ConsoleSpanExporter()));
-
-        traceProvider.register();
 
         start(logger, resource);
     }

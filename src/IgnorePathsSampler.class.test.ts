@@ -94,9 +94,7 @@ describe("IgnorePathsSampler", () => {
     });
 
     it("should not record if path is ignored", () => {
-        const ctx = context.active().setValue(Symbol.for("OpenTelemetry Context Key SPAN"), {
-            _spanContext: { ..._spanContext, traceFlags: 0 },
-        });
+        const ctx = context.active();
         const result: SamplingResult = sampler.shouldSample(
             ctx,
             "45646456yfhgfgghfhg",
@@ -111,7 +109,7 @@ describe("IgnorePathsSampler", () => {
 
     it("should not record if parent trace was marked has deleted", () => {
         const ctx = context.active().setValue(Symbol.for("OpenTelemetry Context Key SPAN"), {
-            _spanContext: { ..._spanContext, traceFlags: 0 },
+            isRecording: () => false,
         });
         const result: SamplingResult = sampler.shouldSample(
             ctx,

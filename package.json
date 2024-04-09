@@ -1,6 +1,6 @@
 {
 	"name": "@haniel/opentel",
-	"version": "1.0.1",
+	"version": "1.0.2",
 	"description": "an helper pacakage to start with sending open telmertry tracs logs and mertics",
 	"main": "dist/instrumentation.js",
 	"scripts": {
@@ -16,6 +16,7 @@
 		"@opentelemetry/auto-instrumentations-node": "^0.43.0",
 		"@opentelemetry/exporter-metrics-otlp-proto": "^0.50.0",
 		"@opentelemetry/exporter-trace-otlp-proto": "^0.50.0",
+		"@opentelemetry/exporter-zipkin": "^1.23.0",
 		"@opentelemetry/resources": "^1.23.0",
 		"@opentelemetry/sdk-metrics": "^1.23.0",
 		"@opentelemetry/sdk-node": "^0.50.0",

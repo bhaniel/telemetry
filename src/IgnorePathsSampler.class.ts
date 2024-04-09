@@ -10,7 +10,8 @@ export class IgnorePathsSampler {
 
     shouldSample(context, traceId, spanName, spanKind, attributes, links) {
         const span = context._currentContext.get(this.spanSymbol);
-        if (this.ignorePaths[attributes["http.target"]] || (span && span._spanContext.traceFlags === 0)) {
+
+        if (this.ignorePaths[attributes["http.target"]] || (span && !span.isRecording())) {
             return { decision: SamplingDecision.NOT_RECORD };
         }
 
