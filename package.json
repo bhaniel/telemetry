@@ -1,6 +1,6 @@
 {
 	"name": "@haniel/opentel",
-	"version": "1.0.3",
+	"version": "1.0.4",
 	"description": "an helper pacakage to start with sending open telmertry tracs logs and mertics",
 	"main": "dist/instrumentation.js",
 	"scripts": {

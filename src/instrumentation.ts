@@ -45,7 +45,7 @@ if (config.isOpentel) {
             ["environment"]: config.environment,
         });
         initMetricsProvider(resource, config.url, config.token, config.isMetrics);
-        initTraceProvider(resource, config.url, config.token, customLogger, config.isConsole, sampler, config.isZipKin);
+        initTraceProvider(resource, config.url, config.token, config.isConsole, sampler, config.isZipKin);
         setupLogging(config.logUrl, config.logToken, forwardLogToOpenTelemetry);
         start(customLogger, resource, config.isDebug);
         customLogger.info(`Instrumentation started on ${serviceName} and send trace to ${process.env.OPENTELURL}`);

@@ -75,7 +75,6 @@ export function initTraceProvider(
     resource: Resource,
     url,
     token,
-    logger,
     isConsole: boolean,
     sampler: IgnorePathsSampler,
     isZipKin: boolean,
