@@ -19,7 +19,6 @@ export class IgnorePathsSampler implements Sampler {
         const span = context._currentContext.get(this.spanSymbol);
 
         if (this.ignorePaths[attributes["http.target"]] || (span && !span.isRecording())) {
-            console.log("IgnorePathsSampler: Ignoring path: ", attributes["http.target"]);
             return { decision: SamplingDecision.NOT_RECORD };
         }
 

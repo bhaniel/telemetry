@@ -3,6 +3,7 @@ import { getNodeAutoInstrumentations } from "@opentelemetry/auto-instrumentation
 import { Instrumentation } from "@opentelemetry/instrumentation";
 import { ExpressInstrumentation } from "@opentelemetry/instrumentation-express";
 import { http } from "./http";
+import { NestInstrumentation } from "@opentelemetry/instrumentation-nestjs-core";
 
 export function getInstrumentations(): Instrumentation[] {
     return [
@@ -13,5 +14,6 @@ export function getInstrumentations(): Instrumentation[] {
         }),
         http,
         new ExpressInstrumentation(),
+        new NestInstrumentation(),
     ];
 }
