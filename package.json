@@ -6,7 +6,7 @@
 	"scripts": {
 		"clean": "rimraf dist",
 		"build": "tsc",
-		"watch": "nodemon --ext ts --exec 'npm run clean && npm run build'",
+		"watch": "nodemon --ext ts --exec 'npm run clean && npm run build' || exit 1",
 		"watchtest": "tsc --clean --watch",
 		"lint": "eslint .",
 		"test": "jest"
@@ -26,7 +26,8 @@
 		"@opentelemetry/sdk-metrics": "^1.23.0",
 		"@opentelemetry/sdk-node": "^0.50.0",
 		"@opentelemetry/sdk-trace-node": "^1.23.0",
-		"@opentelemetry/semantic-conventions": "^1.23.0"
+		"@opentelemetry/semantic-conventions": "^1.23.0",
+		"whatwg-mimetype": "^4.0.0"
 	},
 	"devDependencies": {
 		"@types/jest": "^29.5.12",

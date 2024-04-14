@@ -53,9 +53,7 @@ if (config.isOpentel) {
         initTraceProvider(resource);
         setupLogging(config.logUrl, config.logToken, forwardLogToOpenTelemetry);
         start(resource);
-        customLogger.info(
-            `Instrumentation started on ${servicePackage.serviceName} and send trace to ${process.env.OPENTELURL}`,
-        );
+        customLogger.info(`Instrumentation started on ${servicePackage.serviceName} and send trace to ${config.url}`);
     } catch (err) {
         customLogger.error(err);
     }

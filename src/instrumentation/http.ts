@@ -1,37 +1,10 @@
 import { HttpInstrumentation } from "@opentelemetry/instrumentation-http";
-import { ClientRequest } from "http";
+import { ClientRequest, IncomingMessage, ServerResponse } from "http";
 import * as shimmer from "shimmer";
+import { MIMEType } from "whatwg-mimetype";
+const MAX_CONTENT_LENGTH = 0;
 
-const extractBody = (span, request: ClientRequest) => {
-    const requestBodyChunks = [];
-    shimmer.wrap(
-        request,
-        "write",
-        (original) =>
-            function (...data: unknown[]) {
-                return original.apply(this, data);
-            },
-    );
-
-    shimmer.wrap(
-        request,
-        "end",
-        (original) =>
-            function (...data) {
-                if (data) {
-                    const decodedData = decodeURIComponent(data.toString());
-                    requestBodyChunks.push(decodedData);
-                }
-                if (requestBodyChunks.length > 0) {
-                    const body = requestBodyChunks.join();
-                    span.setAttribute("http.request_body", body);
-                }
-                return original.apply(this, data);
-            },
-    );
-};
-
-const extractData = (span, request) => {
+const extractData = (span, request, param) => {
     shimmer.wrap(
         request,
         "emit",
@@ -39,7 +12,7 @@ const extractData = (span, request) => {
             function (event, ...data) {
                 if (original) {
                     if (request && event === "data" && data.length) {
-                        span.setAttribute("http.request_body", data.toString());
+                        span.setAttribute(param, data.toString());
                     }
 
                     return original.apply(this, [event, ...data]);
@@ -48,19 +21,88 @@ const extractData = (span, request) => {
     );
 };
 
+function shouldSkipResponseContent(response: ServerResponse<IncomingMessage> | IncomingMessage) {
+    let contentType;
+    let contentLength;
+    if (response instanceof IncomingMessage) {
+        contentType = response?.headers?.["content-type"];
+        contentLength = response?.headers?.["content-length"];
+    } else {
+        contentType = response.getHeader("content-type") || response.getHeader("Content-Type");
+        if (Array.isArray(contentType)) {
+            [contentType] = contentType;
+        }
+        contentLength = response.getHeader("content-length") || response.getHeader("Content-Length");
+        if (typeof contentLength === "number") {
+            contentLength = contentLength.toString();
+        } else if (Array.isArray(contentLength)) {
+            [contentLength] = contentLength;
+        }
+    }
+    if (isNotAllowedContentType(contentType) || isNotAllowedContetLength(contentLength)) return true;
+
+    return false;
+}
+const isNotAllowedContetLength = (contentLength: string): boolean => {
+    if (!contentLength || isNaN(Number(contentLength))) {
+        return false;
+    }
+    if (MAX_CONTENT_LENGTH === 0) return false;
+    if (Number(contentLength) > MAX_CONTENT_LENGTH) {
+        return true;
+    }
+
+    return false;
+};
+const isNotAllowedContentType = (contentType: string): boolean => {
+    if (!contentType) return false;
+
+    const { type, subtype } = new MIMEType(contentType);
+    const excludedTypes = ["audio", "image", "multipart", "video"];
+    const excludedTextSubTypes = ["css", "html", "javascript"];
+    const excludedApplicationSubTypes = ["javascript"];
+
+    if (excludedTypes.includes(type)) return true;
+
+    if (type === "text" && (excludedTextSubTypes.includes(subtype) || subtype?.startsWith("vnd"))) return true;
+
+    if (type === "application" && excludedApplicationSubTypes.includes(subtype)) return true;
+
+    return false;
+};
+
+const patchSendMethod = (span, patched, param) => {
+    if (patched && patched._send) {
+        shimmer.wrap(patched, "_send", function (original) {
+            return function (chunk) {
+                const data = chunk.toString();
+                if (data.length > 0) {
+                    span.setAttribute(param, data);
+                }
+                return original.apply(this, arguments);
+            };
+        });
+    }
+};
+
 export const http = new HttpInstrumentation({
     enabled: true,
     requestHook: (span, request) => {
         if (!span.isRecording()) return;
-        if ((request === null || request === void 0 ? void 0 : request.method) === "GET") return;
+        if (request?.method === "GET") return;
         if (request instanceof ClientRequest) {
-            extractBody(span, request);
+            patchSendMethod(span, request, "http.request_body");
         } else {
-            extractData(span, request);
-            // span.setAttribute("http.method", request.method);
-            // span.setAttribute("http.url", request.url);
-            // span.setAttribute("http.headers", JSON.stringify(request.headers));
-            // console.log(request.headers);
+            extractData(span, request, "http.request_body");
+        }
+    },
+    responseHook: (span, response) => {
+        if (!span.isRecording()) return;
+        if (shouldSkipResponseContent(response)) return;
+        if (response instanceof IncomingMessage) {
+            extractData(span, response, "http.response_body");
+        } else {
+            patchSendMethod(span, response, "http.response_body");
         }
     },
 });
