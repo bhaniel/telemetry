@@ -25,13 +25,13 @@ import { MeterProvider, PeriodicExportingMetricReader } from "@opentelemetry/sdk
 import { NodeSDK } from "@opentelemetry/sdk-node";
 import { getInstrumentations } from "./instrumentation";
 
-// #Mark - Custom logger
 export const customLogger = new CustomDiagLogger("OpenTelDebug: ", new DiagConsoleLogger());
 export const sampler: IgnorePathsSampler = new IgnorePathsSampler(
     new ParentBasedSampler({
         root: new TraceIdRatioBasedSampler(1),
     }),
 );
+let sdk: NodeSDK;
 function forwardLogToOpenTelemetry(message: string): void {
     customLogger.info("Forwarding log:", message);
     // Here you would forward the message to OpenTelemetry Collector or other backend
@@ -89,7 +89,7 @@ function initMetricsProvider(resource: Resource) {
 }
 
 function start(resource: Resource, isDebug = false) {
-    const sdk = new NodeSDK({
+    sdk = new NodeSDK({
         resource,
         instrumentations: getInstrumentations(),
     });
