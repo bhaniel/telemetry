@@ -4,14 +4,22 @@ export class IgnorePathsSampler implements Sampler {
     private spanSymbol = Symbol.for("OpenTelemetry Context Key SPAN");
 
     constructor(
-        private ignorePaths: { [key: string]: boolean },
         private delegateSampler: ParentBasedSampler,
+        private ignorePaths: { [key: string]: boolean } = {
+            "/version": true,
+            "/health_check": true,
+            "/metrics": true,
+            "/swagger": true,
+            "/swagger-json": true,
+            "/favicon.ico": true,
+        },
     ) {}
 
     shouldSample(context, traceId, spanName, spanKind, attributes, links) {
         const span = context._currentContext.get(this.spanSymbol);
 
         if (this.ignorePaths[attributes["http.target"]] || (span && !span.isRecording())) {
+            console.log("IgnorePathsSampler: Ignoring path: ", attributes["http.target"]);
             return { decision: SamplingDecision.NOT_RECORD };
         }
 

@@ -30,17 +30,14 @@ describe("IgnorePathsSampler", () => {
             traceFlags: TraceFlags.NONE,
         };
 
-        sampler = new IgnorePathsSampler({ "/ignore": true }, mockParentBasedSampler);
+        sampler = new IgnorePathsSampler(mockParentBasedSampler, { "/ignore": true });
     });
 
     it("should ignore specified paths", () => {
-        const sampler = new IgnorePathsSampler(
-            {
-                "/ignore": false,
-                "/dont-ignore": true,
-            },
-            mockParentBasedSampler,
-        );
+        const sampler = new IgnorePathsSampler(mockParentBasedSampler, {
+            "/ignore": false,
+            "/dont-ignore": true,
+        });
         const ctx = context.active();
 
         expect(
