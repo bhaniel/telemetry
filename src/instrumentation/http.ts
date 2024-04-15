@@ -1,7 +1,7 @@
 import { HttpInstrumentation } from "@opentelemetry/instrumentation-http";
 import { ClientRequest, IncomingMessage, ServerResponse } from "http";
 import * as shimmer from "shimmer";
-import { MIMEType } from "whatwg-mimetype";
+import * as MIMEType from "whatwg-mimetype";
 const MAX_CONTENT_LENGTH = 0;
 
 const extractData = (span, request, param) => {
@@ -39,6 +39,8 @@ function shouldSkipResponseContent(response: ServerResponse<IncomingMessage> | I
             [contentLength] = contentLength;
         }
     }
+    console.log("contentType", contentType);
+    console.log("contentLength", contentLength);
     if (isNotAllowedContentType(contentType) || isNotAllowedContetLength(contentLength)) return true;
 
     return false;
@@ -56,8 +58,9 @@ const isNotAllowedContetLength = (contentLength: string): boolean => {
 };
 const isNotAllowedContentType = (contentType: string): boolean => {
     if (!contentType) return false;
-
+    console.log("contentType2", contentType);
     const { type, subtype } = new MIMEType(contentType);
+    console.log("type", type);
     const excludedTypes = ["audio", "image", "multipart", "video"];
     const excludedTextSubTypes = ["css", "html", "javascript"];
     const excludedApplicationSubTypes = ["javascript"];
@@ -98,10 +101,14 @@ export const http = new HttpInstrumentation({
     },
     responseHook: (span, response) => {
         if (!span.isRecording()) return;
+        console.log("response data record");
         if (shouldSkipResponseContent(response)) return;
+        console.log("response data method");
         if (response instanceof IncomingMessage) {
+            console.log("response data extract");
             extractData(span, response, "http.response_body");
         } else {
+            console.log("response data patch");
             patchSendMethod(span, response, "http.response_body");
         }
     },
