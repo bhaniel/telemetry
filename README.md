@@ -1,20 +1,30 @@
 # Package Name
 
-This package is designed to work with OpenTelemetry. To get started, you need to set the following environment variables:
+This package is designed to work with OpenTelemetry.
+This package includes HTTP instrumentation to trace HTTP requests and responses by default ( can't be configured yet).
+It uses the OpenTelemetry HTTP Instrumentation package and provides additional functionality to capture request and response bodies.
 
-- `OPENTELTOKEN`: This is the token used for authentication.
-- `OPENTELURL`: This is the URL of the OpenTelemetry server.
-- `OPENTELTRACE`: This is a flag to enable or disable tracing.
-- `OPENTELLOGGINGURL` : This is the URL for OpenTelemetry logs server
+To get started, you need to set the following environment variables:
+
+-   `OPENTELTRACE`: This is a flag to enable or disable tracing.
+-   `OPENTEL_URL`: This is the URL of the OpenTelemetry server ( Collector ).
+-   `OPENTEL_TOKEN`: This is the token used for OpenTelemetry server ( Collector ).
+-   `OPENTEL_LOG_URL`: This is the URL for OpenTelemetry logs server.
+-   `OPENTEL_LOG_TOKEN`: This is the Token for OpenTelemetry logs server.
+-   `OPENTEL_CONSOLE`: Set this variable to any value to enable console logging.
+-   `NODE_ENV`: This is a standard Node.js environment variable, set it to `production`, `development`, etc. based on your environment.
+-   `OPENTEL_METRICS`: Set this variable to any value to enable metrics.
+-   `OPENTEL_INIT`: Set this variable to any value to initialize OpenTelemetry.
+-   `OPENTEL_DEBUG`: Set this variable to any value to enable debug mode.
 
 ## Installation
 
 To install this package, you can use npm or yarn:
 
 ```bash
-npm install package-name
+npm install @haniel/opentel
 # or
-yarn add package-name
+yarn add @haniel/opentel
 ```
 
 ## Usage
@@ -22,36 +32,34 @@ yarn add package-name
 After installing the package, you can import it in your project:
 
 ```javascript
-const packageName = require("package-name");
+const packageName = require("@haniel/opentel");
 ```
-
-Remember to replace package-name with the actual name of your package.
 
 ## Configuration
 
 To configure the package, you need to set the environment variables mentioned above. You can do this in your .env file or in your hosting environment.
 
 ```
-OPENTELTOKEN=your_token
-OPENTELURL=your_url
-OPENTELTRACE=your_trace_flag
-OPENTELLOGGINGURL=you_url_for_logs
+OPENTEL_TOKEN="collector_token"
+OPENTEL_URL="collector_url"
+OPENTEL_INIT=true
+OPENTEL_DEBUG=true
 ```
 
-Replace `your_token`, `your_url`,`you_url_for_logs` and `your_trace_flag` with your actual values.
+Replace `collector_token`, `collector_url`, with your actual values.
 
 ### Ignore Paths
 
-By default, certain paths are ignored by this package. 
+By default, certain paths are ignored by this package.
 
 ```json
 {
-  "/version": true,
-  "/health_check": true,
-  "/metrics": true,
-  "/swagger": true,
-  "/swagger-json": true,
-  "/favicon.ico": true
+    "/version": true,
+    "/health_check": true,
+    "/metrics": true,
+    "/swagger": true,
+    "/swagger-json": true,
+    "/favicon.ico": true
 }
 ```
 
@@ -67,10 +75,10 @@ You can override the default ignore paths by importing the `setIgnorePaths` func
 Here's how you can use `setIgnorePaths`:
 
 ```javascript
-import { setIgnorePaths } from 'your-package-name';
+import { setIgnorePaths } from "@haniel/opentel";
 
 setIgnorePaths({}, false); // This will override the default paths with an empty object
-setIgnorePaths({ '/test': true }); // This will add '/test' to the default paths
+setIgnorePaths({ "/test": true }); // This will add '/test' to the default paths
 ```
 
 In the first example, the default paths are replaced with an empty object, which means no paths will be ignored. In the second example, the path '/test' is added to the default paths.

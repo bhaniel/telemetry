@@ -105,11 +105,18 @@ const responseHook = (span, response) => {
         patchSendMethod(response, RESPONSE_BODY);
     }
 };
-
+// TODO: check compression and decompression options in the future such as gzip , brotli, etc.
+// TODO: Also check content length so we can limit the size of the span attributes
 const applyCustomAttributesOnSpan = (span, request, response) => {
     if (!span.isRecording()) return;
-    if (request && request[REQUEST_BODY]) span?.setAttribute(REQUEST_BODY, request[REQUEST_BODY]);
-    if (response && response[RESPONSE_BODY]) span?.setAttribute(RESPONSE_BODY, response[RESPONSE_BODY]);
+    if (request && request[REQUEST_BODY]) {
+        span?.setAttribute(REQUEST_BODY, request[REQUEST_BODY]);
+        delete request[REQUEST_BODY];
+    }
+    if (response && response[RESPONSE_BODY]) {
+        span?.setAttribute(RESPONSE_BODY, response[RESPONSE_BODY]);
+        delete response[RESPONSE_BODY];
+    }
 };
 
 export const http = new HttpInstrumentation({
