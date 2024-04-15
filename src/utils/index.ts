@@ -61,9 +61,9 @@ export const getEnvironmentVariable = (key: string, parser: undefined | ((value:
 export const getEnvVar = () => {
     return {
         url: getEnvironmentVariable("OPENTEL_URL"),
+        token: getEnvironmentVariable("OPENTEL_TOKEN"),
         logUrl: getEnvironmentVariable("OPENTEL_LOG_URL"),
         logToken: getEnvironmentVariable("OPENTEL_LOG_TOKEN"),
-        token: getEnvironmentVariable("OPENTEL_TOKEN"),
         isConsole: !!getEnvironmentVariable("OPENTEL_CONSOLE"),
         environment: getEnvironmentVariable("NODE_ENV"),
         isMetrics: !!getEnvironmentVariable("OPENTEL_METRICS"),

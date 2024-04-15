@@ -12,7 +12,12 @@ const extractData = (span, request, param) => {
             function (event, ...data) {
                 if (original) {
                     if (request && event === "data" && data.length) {
-                        span.setAttribute(param, data.toString());
+                        request[param] = request[param] || "";
+                        request[param] += data[0].toString();
+                    }
+                    if (request && event === "end") {
+                        span.setAttribute(param, request[param]);
+                        delete request[param];
                     }
 
                     return original.apply(this, [event, ...data]);
@@ -70,17 +75,24 @@ const isNotAllowedContentType = (contentType: string): boolean => {
     return false;
 };
 
-const patchSendMethod = (span, patched, param) => {
-    if (patched && patched._send) {
-        shimmer.wrap(patched, "_send", function (original) {
-            return function (chunk) {
-                const data = chunk.toString();
-                if (data.length > 0) {
-                    span.setAttribute(param, data);
-                }
-                // eslint-disable-next-line prefer-rest-params
-                return original.apply(this, arguments);
+const patchSendMethod = (span, request, param) => {
+    if (request && request._send) {
+        shimmer.wrap(request, "_send", function (original) {
+            return function (...chunk) {
+                request[param] = request[param] || "";
+                request[param] += chunk[0].toString();
+                return original.apply(this, [...chunk]);
             };
+        });
+
+        // Assuming `patched` could be a response object in an HTTP server context
+        request.on("finish", () => {
+            console.log("finish", request[param]);
+            // 'finish' event is emitted when the response has been sent
+            if (request[param].length > 0) {
+                span.setAttribute(param, request[param]);
+                delete request[param];
+            }
         });
     }
 };
