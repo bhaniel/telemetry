@@ -7,7 +7,6 @@ it also have inside the netsInstumration and the OpenTelemetry Meta Packages for
 
 To get started, you need to set the following environment variables:
 
--   `OPENTELTRACE`: This is a flag to enable or disable tracing.
 -   `OPENTEL_URL`: This is the URL of the OpenTelemetry server ( Collector ).
 -   `OPENTEL_TOKEN`: This is the token used for OpenTelemetry server ( Collector ).
 -   `OPENTEL_LOG_URL`: This is the URL for OpenTelemetry logs server.
