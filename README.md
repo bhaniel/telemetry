@@ -1,8 +1,9 @@
-# Package Name
+# Opentel
 
 This package is designed to work with OpenTelemetry.
 This package includes HTTP instrumentation to trace HTTP requests and responses by default ( can't be configured yet).
 It uses the OpenTelemetry HTTP Instrumentation package and provides additional functionality to capture request and response bodies.
+it also have inside the netsInstumration and the OpenTelemetry Meta Packages for Node
 
 To get started, you need to set the following environment variables:
 
