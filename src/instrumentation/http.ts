@@ -3,6 +3,8 @@ import { ClientRequest, IncomingMessage, ServerResponse } from "http";
 import * as shimmer from "shimmer";
 import * as MIMEType from "whatwg-mimetype";
 const MAX_CONTENT_LENGTH = 0;
+const RESPONSE_BODY = "http.response_body";
+const REQUEST_BODY = "http.request_body";
 
 const extractData = (span, request, param) => {
     shimmer.wrap(
@@ -15,10 +17,10 @@ const extractData = (span, request, param) => {
                         request[param] = request[param] || "";
                         request[param] += data[0].toString();
                     }
-                    if (request && event === "end") {
-                        span.setAttribute(param, request[param]);
-                        delete request[param];
-                    }
+                    // if (request && event === "end") {
+                    //     span.setAttribute(param, request[param]);
+                    //     // delete request[param];
+                    // }
 
                     return original.apply(this, [event, ...data]);
                 }
@@ -85,15 +87,15 @@ const patchSendMethod = (span, request, param) => {
             };
         });
 
-        // Assuming `patched` could be a response object in an HTTP server context
-        request.on("finish", () => {
-            console.log("finish", request[param]);
-            // 'finish' event is emitted when the response has been sent
-            if (request[param].length > 0) {
-                span.setAttribute(param, request[param]);
-                delete request[param];
-            }
-        });
+        // // Assuming `patched` could be a response object in an HTTP server context
+        // request.on("finish", () => {
+        //     console.log("finish", request[param]);
+        //     // 'finish' event is emitted when the response has been sent
+        //     if (request[param].length > 0) {
+        //         span.setAttribute(param, request[param]);
+        //         // delete request[param];
+        //     }
+        // });
     }
 };
 
@@ -103,18 +105,23 @@ export const http = new HttpInstrumentation({
         if (!span.isRecording()) return;
         if (request?.method === "GET") return;
         if (request instanceof ClientRequest) {
-            patchSendMethod(span, request, "http.request_body");
+            patchSendMethod(span, request, REQUEST_BODY);
         } else {
-            extractData(span, request, "http.request_body");
+            extractData(span, request, REQUEST_BODY);
         }
     },
     responseHook: (span, response) => {
         if (!span.isRecording()) return;
         if (shouldSkipResponseContent(response)) return;
         if (response instanceof IncomingMessage) {
-            extractData(span, response, "http.response_body");
+            extractData(span, response, RESPONSE_BODY);
         } else {
-            patchSendMethod(span, response, "http.response_body");
+            patchSendMethod(span, response, RESPONSE_BODY);
         }
+    },
+    applyCustomAttributesOnSpan: (span, request, response) => {
+        if (!span.isRecording()) return;
+        if (request && request[REQUEST_BODY]) span?.setAttribute(REQUEST_BODY, request[REQUEST_BODY]);
+        if (response && response[RESPONSE_BODY]) span?.setAttribute(RESPONSE_BODY, response[RESPONSE_BODY]);
     },
 });
