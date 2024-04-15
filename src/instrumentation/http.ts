@@ -6,22 +6,17 @@ const MAX_CONTENT_LENGTH = 0;
 const RESPONSE_BODY = "http.response_body";
 const REQUEST_BODY = "http.request_body";
 
-const extractData = (span, request, param) => {
+const extractData = (reqOrRes, param) => {
     shimmer.wrap(
-        request,
+        reqOrRes,
         "emit",
         (original) =>
             function (event, ...data) {
                 if (original) {
-                    if (request && event === "data" && data.length) {
-                        request[param] = request[param] || "";
-                        request[param] += data[0].toString();
+                    if (reqOrRes && event === "data" && data.length) {
+                        reqOrRes[param] = reqOrRes[param] || "";
+                        reqOrRes[param] += data[0].toString();
                     }
-                    // if (request && event === "end") {
-                    //     span.setAttribute(param, request[param]);
-                    //     // delete request[param];
-                    // }
-
                     return original.apply(this, [event, ...data]);
                 }
             },
@@ -50,6 +45,7 @@ function shouldSkipResponseContent(response: ServerResponse<IncomingMessage> | I
 
     return false;
 }
+
 const isNotAllowedContetLength = (contentLength: string): boolean => {
     if (!contentLength || isNaN(Number(contentLength))) {
         return false;
@@ -61,6 +57,7 @@ const isNotAllowedContetLength = (contentLength: string): boolean => {
 
     return false;
 };
+
 const isNotAllowedContentType = (contentType: string): boolean => {
     if (!contentType) return false;
     const { type, subtype } = new MIMEType(contentType);
@@ -77,51 +74,47 @@ const isNotAllowedContentType = (contentType: string): boolean => {
     return false;
 };
 
-const patchSendMethod = (span, request, param) => {
-    if (request && request._send) {
-        shimmer.wrap(request, "_send", function (original) {
+const patchSendMethod = (reqOrRes, param) => {
+    if (reqOrRes && reqOrRes._send) {
+        shimmer.wrap(reqOrRes, "_send", function (original) {
             return function (...chunk) {
-                request[param] = request[param] || "";
-                request[param] += chunk[0].toString();
+                reqOrRes[param] = reqOrRes[param] || "";
+                reqOrRes[param] += chunk[0].toString();
                 return original.apply(this, [...chunk]);
             };
         });
-
-        // // Assuming `patched` could be a response object in an HTTP server context
-        // request.on("finish", () => {
-        //     console.log("finish", request[param]);
-        //     // 'finish' event is emitted when the response has been sent
-        //     if (request[param].length > 0) {
-        //         span.setAttribute(param, request[param]);
-        //         // delete request[param];
-        //     }
-        // });
     }
+};
+
+const requestHook = (span, request) => {
+    if (!span.isRecording()) return;
+    if (request?.method === "GET") return;
+    if (request instanceof ClientRequest) {
+        patchSendMethod(request, REQUEST_BODY);
+    } else {
+        extractData(request, REQUEST_BODY);
+    }
+};
+
+const responseHook = (span, response) => {
+    if (!span.isRecording()) return;
+    if (shouldSkipResponseContent(response)) return;
+    if (response instanceof IncomingMessage) {
+        extractData(response, RESPONSE_BODY);
+    } else {
+        patchSendMethod(response, RESPONSE_BODY);
+    }
+};
+
+const applyCustomAttributesOnSpan = (span, request, response) => {
+    if (!span.isRecording()) return;
+    if (request && request[REQUEST_BODY]) span?.setAttribute(REQUEST_BODY, request[REQUEST_BODY]);
+    if (response && response[RESPONSE_BODY]) span?.setAttribute(RESPONSE_BODY, response[RESPONSE_BODY]);
 };
 
 export const http = new HttpInstrumentation({
     enabled: true,
-    requestHook: (span, request) => {
-        if (!span.isRecording()) return;
-        if (request?.method === "GET") return;
-        if (request instanceof ClientRequest) {
-            patchSendMethod(span, request, REQUEST_BODY);
-        } else {
-            extractData(span, request, REQUEST_BODY);
-        }
-    },
-    responseHook: (span, response) => {
-        if (!span.isRecording()) return;
-        if (shouldSkipResponseContent(response)) return;
-        if (response instanceof IncomingMessage) {
-            extractData(span, response, RESPONSE_BODY);
-        } else {
-            patchSendMethod(span, response, RESPONSE_BODY);
-        }
-    },
-    applyCustomAttributesOnSpan: (span, request, response) => {
-        if (!span.isRecording()) return;
-        if (request && request[REQUEST_BODY]) span?.setAttribute(REQUEST_BODY, request[REQUEST_BODY]);
-        if (response && response[RESPONSE_BODY]) span?.setAttribute(RESPONSE_BODY, response[RESPONSE_BODY]);
-    },
+    requestHook,
+    responseHook,
+    applyCustomAttributesOnSpan,
 });
