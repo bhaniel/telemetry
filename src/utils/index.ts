@@ -2,7 +2,7 @@ import { Resource } from "@opentelemetry/resources";
 import { SEMRESATTRS_SERVICE_NAME, SEMRESATTRS_SERVICE_VERSION } from "@opentelemetry/semantic-conventions";
 import * as fs from "fs";
 import { StdoutInterceptor } from "../helpers/stdoutInterceptor.class";
-
+import { customLogger } from "../init";
 export const getServiceDetails = (customLogger) => {
     try {
         const servicePackage = JSON.parse(fs.readFileSync("package.json", "utf8"));
@@ -42,7 +42,7 @@ export const createExporterConfig = (baseUrl: string, endpoint: string, token: s
     };
 };
 
-export const getEnvironmentVariable = (key, parser = undefined) => {
+export const getEnvironmentVariable = (key: string, parser: undefined | ((value: string) => never) = undefined) => {
     const value = process.env[key];
     if (value === undefined) {
         return undefined;
@@ -53,7 +53,7 @@ export const getEnvironmentVariable = (key, parser = undefined) => {
     try {
         return parser(value);
     } catch (error) {
-        console.log(`Cannot parse ${key}, value is ${value}.`, error);
+        customLogger.error(`Cannot parse ${key}, value is ${value}.`, error);
         return undefined;
     }
 };
