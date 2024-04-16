@@ -1,4 +1,5 @@
-import { ParentBasedSampler, Sampler, SamplingDecision } from "@opentelemetry/sdk-trace-node";
+import { Attributes, Context, Link, SpanKind } from "@opentelemetry/api";
+import { ParentBasedSampler, Sampler, SamplingDecision, Span } from "@opentelemetry/sdk-trace-node";
 
 export class IgnorePathsSampler implements Sampler {
     private spanSymbol = Symbol.for("OpenTelemetry Context Key SPAN");
@@ -15,10 +16,17 @@ export class IgnorePathsSampler implements Sampler {
         },
     ) {}
 
-    shouldSample(context, traceId, spanName, spanKind, attributes, links) {
-        const span = context._currentContext.get(this.spanSymbol);
-
-        if (this.ignorePaths[attributes["http.target"]] || (span && !span.isRecording())) {
+    shouldSample(
+        context: Context,
+        traceId: string,
+        spanName: string,
+        spanKind: SpanKind,
+        attributes: Attributes,
+        links: Link[],
+    ) {
+        // const span: Span = context.getValue(this.spanSymbol) as Span;
+        if (typeof attributes["http.target"] === "string" && this.ignorePaths[attributes["http.target"]]) {
+            // console.log("span", span);
             return { decision: SamplingDecision.NOT_RECORD };
         }
 

@@ -104,22 +104,6 @@ describe("IgnorePathsSampler", () => {
         expect(result.decision).toEqual(SamplingDecision.NOT_RECORD);
     });
 
-    it("should not record if parent trace was marked has deleted", () => {
-        const ctx = context.active().setValue(Symbol.for("OpenTelemetry Context Key SPAN"), {
-            isRecording: () => false,
-        });
-        const result: SamplingResult = sampler.shouldSample(
-            ctx,
-            "45646456yfhgfgghfhg",
-            "emptyURL",
-            SpanKind.CLIENT,
-            {},
-            [],
-        );
-
-        expect(result.decision).toEqual(SamplingDecision.NOT_RECORD);
-    });
-
     it("should delegate to ParentBasedSampler if path is not ignored", () => {
         const ctx = context.active();
         const result = sampler.shouldSample(

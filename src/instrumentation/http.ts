@@ -1,4 +1,4 @@
-import { HttpInstrumentation } from "@opentelemetry/instrumentation-http";
+import { HttpInstrumentation, HttpInstrumentationConfig } from "@opentelemetry/instrumentation-http";
 import { ClientRequest, IncomingMessage, ServerResponse } from "http";
 import * as shimmer from "shimmer";
 import * as MIMEType from "whatwg-mimetype";
@@ -119,9 +119,8 @@ const applyCustomAttributesOnSpan = (span, request, response) => {
     }
 };
 
-export const http = new HttpInstrumentation({
-    enabled: true,
-    requestHook,
-    responseHook,
-    applyCustomAttributesOnSpan,
-});
+export const getHttpInstrumentation = (
+    config: HttpInstrumentationConfig = { enabled: true, requestHook, responseHook, applyCustomAttributesOnSpan },
+) => {
+    return new HttpInstrumentation(config);
+};
