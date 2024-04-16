@@ -11,10 +11,7 @@ const getHeaders = (headers) => {
 };
 
 const kafkaHook = (span, topic, message) => {
-    console.log("span kind", span.kind);
-    console.log("isRecording", span.isRecording());
-    console.log("isRecording", message);
-    // if (!span.isRecording()) return;
+    if (!span.isRecording()) return;
     span.setAttribute("kafka.headers", JSON.stringify(getHeaders(message.headers)));
     span.setAttribute("kafka.message", message.value.toString());
     if (message.timestamp) {

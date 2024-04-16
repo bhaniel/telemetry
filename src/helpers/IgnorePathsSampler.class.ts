@@ -1,5 +1,5 @@
 import { Attributes, Context, Link, SpanKind } from "@opentelemetry/api";
-import { ParentBasedSampler, Sampler, SamplingDecision, Span } from "@opentelemetry/sdk-trace-node";
+import { ParentBasedSampler, Sampler, SamplingDecision } from "@opentelemetry/sdk-trace-node";
 
 export class IgnorePathsSampler implements Sampler {
     private spanSymbol = Symbol.for("OpenTelemetry Context Key SPAN");
